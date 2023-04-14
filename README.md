@@ -16,7 +16,7 @@ transferable to downstream tasks
 
 ### Method Overview
 
-### Installation
+### Install
 
 ### Evaluation
 
