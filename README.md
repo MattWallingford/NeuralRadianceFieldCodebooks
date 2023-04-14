@@ -13,3 +13,10 @@ tion. NRC learns to reconstruct scenes from novel views using a dictionary of
 object codes which are decoded through a volumetric renderer. This enables the
 discovery of reoccurring visual and geometric patterns across scenes which are
 transferable to downstream tasks 
+
+### Method Overview
+
+### Evaluation
+
+### Training
+
