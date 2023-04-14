@@ -1,7 +1,7 @@
 # [Neural Radiance Field Codebooks](https://arxiv.org/abs/2301.04101)
 
 
-Pytorch implementation for Neural Radiance Field Codebooks (ICLR 2023). 
+Pytorch implementation for **Neural Radiance Field Codebooks** (ICLR 2023). 
 
 ### Abstract
 Compositional representations of the world are a promising step towards enabling
