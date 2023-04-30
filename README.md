@@ -16,6 +16,8 @@ transferable to downstream tasks
 ### Method Overview
 
 ### Install
+`Pip install -r requirements.txt`
+
 
 ### Evaluation
 
