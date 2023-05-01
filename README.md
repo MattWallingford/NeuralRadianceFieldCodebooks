@@ -24,7 +24,7 @@ To create the Thor dataset to train the model first install ProcThor. Instructio
 ### Training
 Training code is in train/train.py. Training options and hyper-parameters can be found in util/args.py. Original model was trained on 1000 scenes from ProcThor with 10 trajectories through each scene with maximum trajectory length of 200 steps.  
 
-python train/train.py -n thor_pretrain -c conf/exp/thorL.conf -D <data dir> -V 2 --gpu_id=<GPU> --prototype_shift --ste 
+`python train/train.py -n thor_pretrain -c conf/exp/thorL.conf -D <data dir> -V 2 --gpu_id=<GPU> --prototype_shift --ste`
 
 ### Evaluation
 Evaluation for segmentation can be found in eval/calc.py. 
@@ -38,4 +38,4 @@ To evaluate on Object-Navigation:
 
 ### Logging
 Log files can be found in <project dir>/logs/<expname>. To visualize loss and reconstruction run 
-'tensorboard --logdir <project dir>/logs/<expname>'
+`tensorboard --logdir <project dir>/logs/<expname>`
