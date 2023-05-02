@@ -26,7 +26,7 @@ Training code is in train/train.py. Training options and hyper-parameters can be
 `python train/train.py -n thor_pretrain -c conf/exp/thorL.conf -D <data dir> -V 2 --gpu_id=<GPU> --prototype_shift --ste`
 
 ### Evaluation
-Evaluation for segmentation can be found in eval/calc.py. 
+Evaluation for segmentation can be found in eval/calc.py. To evaluate the model run `python eval/calc.py`.
 
 To evaluate on Object-Navigation: 
 1. Install AllenAct from https://github.com/allenai/allenact. 
