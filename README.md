@@ -18,7 +18,7 @@ transferable to downstream tasks
 
 ### Create Data
 
-To create the Thor dataset to train the model first install ProcThor. Instructions for installing ProcThor can be found here: https://github.com/allenai/procthor. Once ProcThor has been installed run ThorWalkthrough.py. 
+To create the Thor dataset to train the model first install ProcThor. Instructions for installing ProcThor can be found here: https://github.com/allenai/procthor. Once ProcThor has been installed run `python ThorWalkthrough.py`. 
 
 
 ### Training
