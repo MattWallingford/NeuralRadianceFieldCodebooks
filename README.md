@@ -28,14 +28,12 @@ Training code is in train/train.py. Training options and hyper-parameters can be
 The data directory should be specified as folder containing the frames from the above step. 
 
 ### Evaluation
-Evaluation for segmentation can be found in eval/calc.py. To evaluate the model run `python eval/calc.py`.
 
 To evaluate on Object-Navigation: 
 1. Install AllenAct from https://github.com/allenai/allenact. 
 2. Load the saved model from training in the previous step and load it as the visual network. 
 3. Train the policy network on object-navigation. See AllenAct for further details on training a policy network on the Thor environment. We train for 200 million steps dd-ppo and default hyper-parameters. 
-
-
+Novel view reconstruction can be seen visualized by running: `tensorboard --logdir <project dir>/logs/<expname>`.
 
 ### Logging
 Log files can be found in <project dir>/logs/<expname>. To visualize loss and reconstruction run 
