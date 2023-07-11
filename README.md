@@ -23,7 +23,7 @@ To create the Thor dataset to train the model first install ProcThor. Instructio
 
 ### Training
 Training code is in train/train.py. Training options and hyper-parameters can be found in util/args.py. Original model was trained on 1000 scenes from ProcThor with 10 trajectories through each scene with maximum trajectory length of 200 steps.  
-`python train/train.py -n thor_pretrain -c conf/exp/thorL.conf -D <data dir> -V 2 --gpu_id=<GPU> --prototype_shift --ste`
+`python train/train.py -n NRC -c conf/exp/thorL.conf -D <data dir> -V 1 --gpu_id=<GPU> --dict_size 128 --ste`
 
 The data directory should be specified as folder containing the frames from the above step. 
 
@@ -31,10 +31,14 @@ The data directory should be specified as folder containing the frames from the 
 
 To evaluate on Object-Navigation: 
 1. Install AllenAct from https://github.com/allenai/allenact. 
-2. Load the saved model from training in the previous step and load it as the visual network. 
-3. Train the policy network on object-navigation. See AllenAct for further details on training a policy network on the Thor environment. We train for 200 million steps dd-ppo and default hyper-parameters. 
+2. Load the saved model from training in the previous step and load it as the pretrained visual network. 
+3. Train the policy network on object-navigation with default hyper-parameters. See AllenAct for further details on training a policy network on the Thor environment. We train for 200 million steps dd-ppo and default hyper-parameters. 
 Novel view reconstruction can be seen visualized by running: `tensorboard --logdir <project dir>/logs/<expname>`.
 
 ### Logging
 Log files can be found in <project dir>/logs/<expname>. To visualize loss and reconstruction run 
 `tensorboard --logdir <project dir>/logs/<expname>`
+
+
+### Acknowledgement
+This repository was based off the implementation of PixelNeRF: https://github.com/sxyu/pixel-nerf. 
