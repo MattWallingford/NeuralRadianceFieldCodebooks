@@ -15,8 +15,7 @@ from collections import OrderedDict
 class BinarizeIndictator(autograd.Function):
     @staticmethod
     def forward(ctx, indicator):
-        # Get the subnetwork by sorting the scores and using the top k%
-        out = (indicator >= .5).float()
+        out = (indicator >= 1).float()
         return out
     @staticmethod
     def backward(ctx, g):
@@ -77,7 +76,16 @@ def decoder(in_planes, out_planes, stride = 1):
 
 def basic_decoder(in_planes, out_planes, stride = 1):
     model = nn.Sequential(OrderedDict([
-          ('conv1', nn.Conv2d(in_planes, 512, kernel_size=3, stride=stride, bias=False)),]))
+          ('conv1', nn.Conv2d(in_planes, 512, kernel_size=3, stride=stride, padding=1, bias=False)),]))
+    return model
+
+def variation_model(in_planes, out_planes, stride = 1):
+    model = nn.Sequential(OrderedDict([
+          ('conv1', nn.Conv2d(in_planes, int(in_planes/2), kernel_size=3, stride=stride, bias=False)),
+          ('relu1', nn.ReLU()),
+          ('conv2', nn.Conv2d(int(in_planes/2), out_planes, kernel_size=3, stride=stride, bias=False)),
+          ('relu2', nn.ReLU()),
+          ]))
     return model
 
 
@@ -154,18 +162,21 @@ class SpatialEncoder(nn.Module):
         print("creating encoder of dict size equal to: {}".format(args.dict_size))
         self.dict_size = args.dict_size
         if self.dict_size > 0:
-            self.freeze_conv = conv1x1(512,self.dict_size) #hard coded for now
+            self.freeze_conv = conv1x1(512,self.dict_size)
         self.args = args
-        if args:
-            if args.extra_bits != 0:
-                self.softmax = nn.Softmax(dim=1)
-                self.extra_bits_conv = conv1x1_nf(512,args.extra_bits)
-                self.latent_dict = decoder(self.dict_size+args.extra_bits, 512)
-                #torch.nn.Conv2d(self.dict_size+args.extra_bits, 512, kernel_size = 5)
-            else:
-                self.latent_dict = self.latent_dict = decoder(self.dict_size+args.extra_bits, 512)
-                #torch.nn.Conv2d(self.dict_size, 512, kernel_size = 1)
-        # self.latent (B, L, H, W)
+        self.extra_bits = args.extra_bits
+        if args.dict_size != 0:
+            self.softmax = nn.Softmax(dim=1)
+            self.extra_bits_conv = conv1x1_nf(512,self.dict_size)
+            self.latent_dict = basic_decoder(self.dict_size, 512)
+            self.code_score = torch.tensor(self.dict_size, requires_grad=True, dtype=torch.float32)
+            self.dict_mask = torch.sigmoid(self.code_score*1.5 - 
+                            torch.arange(0, self.dict_size).float()).view(1,self.dict_size,1,1).cuda()
+            self.v_model = variation_model(512, 512)
+
+        else:
+            self.latent_dict = decoder(self.dict_size, 512)
+
     def index_sl(self, uv, cam_z=None, image_size=(), z_bounds=None):
         """
         Get pixel-aligned image features at 2D image coordinates
@@ -271,7 +282,6 @@ class SpatialEncoder(nn.Module):
             self.latents = latents
             align_corners = None if self.index_interp == "nearest " else True
             latent_sz = latents[0].shape[-2:]
-            
             for i in range(len(latents)):
                 latents[i] = F.interpolate(
                     latents[i],
@@ -280,30 +290,31 @@ class SpatialEncoder(nn.Module):
                     align_corners=align_corners,
                 )
             self.latent = torch.cat(latents, dim=1)
-            #print(self.latent.shape)
             if self.dict_size > 0:
-                self.latent_code = self.freeze_conv(self.latent) #MY CODE
-            #print(self.latent_code.shape)
+                self.latent_code = self.freeze_conv(self.latent)
         if not(self.args.standard):
-            if self.args.extra_bits:
-                self.latent_code_cont = self.extra_bits_conv(self.latent)
-                print(self.latent_code_cont.shape)
-                self.latent_code_cont = self.softmax(self.latent_code_cont)
-            if self.dict_size > 0:
-                self.latent_code = torch.cat((self.latent_code_cont, self.latent_code), dim = 1)
+            eps = .25
+            self.variation = self.v_model(self.latent)
+            self.variation_normed = F.normalize(self.variation, p=2, dim=1)*eps
+
+            if self.dict_size: 
+                self.latent_code = self.extra_bits_conv(self.latent)
+                self.latent_code = self.softmax(self.latent_code)
+                self.latent_code = self.latent_code/torch.max(self.latent_code, dim=1, keepdim=True)[0]
             else:
                 self.latent_code = self.latent_code_cont
             if self.args.ste:
-                self.latent_code = BinarizeIndictator.apply(self.latent_code)
-            if self.decouple:
-                if self.nlatent:
-                    self.shape_latent = self.latent_code
-                else:
-                    self.shape_latent = self.latent_dict(self.latent_code)#self.latent_code#
+                selected_code = BinarizeIndictator.apply(self.latent_code)*BinarizeIndictator.apply(self.dict_mask)
+                print(self.dict_mask)
+                print(selected_code[0,:,0,0])
+                self.selected_latent = self.latent_dict(selected_code)
+        
+                self.latent_code = self.selected_latent
             else: 
                 self.latent = self.latent_dict(self.latent_code)
         else:
             self.latent = self.latent
+
         self.latent_scaling[0] = self.latent.shape[-1]
         self.latent_scaling[1] = self.latent.shape[-2]
         self.latent_scaling = self.latent_scaling / (self.latent_scaling - 1) * 2.0
